@@ -20,19 +20,21 @@ class SnakeGame:
     def __init__(self: Self) -> Self:
         self.rows, self.cols = (45,80)
         self.state_arr = [[BlockState.Empty for i in range(self.cols)] for j in range(self.rows)]
-        self.set_block_state(self.place_food(self.state_arr), BlockState.Food)
+        self.head_location = (int(self.rows / 2), int(self.cols / 2))
+        self.set_block_state(self.head_location, BlockState.Snake)
+        self.place_food()
         self.score = 0
         self.is_dead = False
         self.action = InputAction.Right
-        self.head_location = (int(self.rows / 2), int(self.cols / 2))
 
 
-    def place_food(self: Self) -> tuple[int, int]:
+    def place_food(self: Self):
         while True:  #DO WHILE IMPLEMENTATION - do place_food while food placed in invalid space
-            row = random.randint(0,len(self.rows) - 1)
-            column = random.randint(0, len(self.cols[0]) - 1)
+            row = random.randint(0,self.rows - 1)
+            column = random.randint(0, self.cols - 1)
             if self.state_arr[row][column] == BlockState.Empty:
-                return row, column
+                self.set_block_state((row, column), BlockState.Food)
+                return
             
     def get_grid_size(self: Self) -> tuple[int,int]:
         return self.rows, self.cols
@@ -45,7 +47,7 @@ class SnakeGame:
         self.action = action
 
     def process_action(self: Self):
-        new_head_x, new_head_y = self.head_location + self.action
+        new_head_x, new_head_y = self.head_location[0] + self.action.value[0], self.head_location[1] + self.action.value[1]
         if new_head_x < 0 or new_head_x >= self.cols or new_head_y < 0 or new_head_y >= self.rows:
             self.is_dead = True
             return
@@ -54,7 +56,7 @@ class SnakeGame:
             return
         if self.state_arr[new_head_x][new_head_y] == BlockState.Food:
             self.score += 1
-            self.set_block_state(self.place_food(self.state_arr), BlockState.Food)
+            self.set_block_state(self.place_food(), BlockState.Food)
         self.set_block_state((new_head_x,new_head_y), BlockState.Snake)
         
     def get_game_state(self):
