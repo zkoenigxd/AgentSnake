@@ -1,5 +1,3 @@
-
-# Example file showing a circle moving on screen
 import pygame
 
 # pygame setup
@@ -12,7 +10,16 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
+rows, cols = (45,80)
+arr = [[0 for i in range(cols)] for j in range(rows)]
+
+arr[23][40] = 1
+
+def scale_blocks():
+    return screen_width / cols
+
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+block_size = scale_blocks()
 
 while running:
     # poll for events
@@ -23,11 +30,16 @@ while running:
         if event.type == pygame.VIDEORESIZE:
             screen_width = event.w
             screen = pygame.display.set_mode((screen_width, screen_width * aspect_ratio), pygame.RESIZABLE)
+            block_size = scale_blocks()
 
     # fill the screen with a color to wipe away anything from last frame
     screen.fill("black")
+    for r_index, row in enumerate(arr):
+        for c_index, element in enumerate(row):
+            if element == 1:
+                pygame.draw.rect(screen, "white", pygame.Rect(c_index * block_size, r_index * block_size,block_size,block_size), 0, 3)
 
-    pygame.draw.circle(screen, "red", player_pos, 40)
+    #pygame.draw.circle(screen, "red", player_pos, 40)
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_w]:
