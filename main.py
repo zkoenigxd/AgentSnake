@@ -5,9 +5,9 @@ import pygame
 # pygame setup
 pygame.init()
 screen_width = 1280
-screen_height = 720
+aspect_ratio = 9/16
 
-screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+screen = pygame.display.set_mode((screen_width, screen_width * aspect_ratio), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 running = True
 dt = 0
@@ -22,8 +22,7 @@ while running:
             running = False
         if event.type == pygame.VIDEORESIZE:
             screen_width = event.w
-            screen_height = event.h
-            screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+            screen = pygame.display.set_mode((screen_width, screen_width * aspect_ratio), pygame.RESIZABLE)
 
     # fill the screen with a color to wipe away anything from last frame
     screen.fill("black")
