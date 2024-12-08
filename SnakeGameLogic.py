@@ -33,7 +33,6 @@ class SnakeGame:
         self.set_block_state(self.head_location, BlockState.Snake)
         self.place_food()
 
-
     def place_food(self: Self):
         while True:  #DO WHILE IMPLEMENTATION - do place_food while food placed in invalid space
             x = random.randint(0,self.rows - 1)
@@ -41,9 +40,6 @@ class SnakeGame:
             if self.state_arr[x][y] == BlockState.Empty:
                 self.set_block_state((x, y), BlockState.Food)
                 return
-            
-    def get_grid_size(self: Self) -> tuple[int,int]:
-        return self.rows, self.cols
     
     def set_block_state(self: Self, location : tuple[int, int], state : BlockState):
         x, y = location
@@ -68,6 +64,3 @@ class SnakeGame:
         self.head_location = (new_head_x, new_head_y)
         self.tail_locations.append(self.head_location)
         self.set_block_state(self.head_location, BlockState.Snake)
-        
-    def get_game_state(self):
-        return self.state_arr, self.score, self.is_dead
