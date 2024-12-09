@@ -1,4 +1,4 @@
-import SnakeGameLogic as gl
+import Games.SnakeGameLogic as gl
 from typing import Self
 import pygame
 

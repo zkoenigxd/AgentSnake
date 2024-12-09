@@ -1,8 +1,10 @@
+from .Scene import Scene
 from typing import Self
 import pygame
-from SnakeGameLogic import SnakeGame, InputAction
+from Games import SnakeGameLogic
+from Games.SnakeGameLogic import SnakeGame, InputAction
 
-class SnakeGameHumanAgentScene:
+class SnakeGameHumanAgentScene(Scene):
 
     def __init__(self):
         self.speed = 10 # input processes per second

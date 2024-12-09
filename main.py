@@ -1,6 +1,6 @@
 import pygame
-import SnakeGameLogic as gl
-import SnakeGameHumanAgentScene as gs
+import Games.SnakeGameLogic as gl
+from Scenes import SnakeGameHumanAgentScene as gs
 from RenderMode import RenderMode_Human
 
 # pygame setup
