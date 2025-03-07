@@ -23,6 +23,7 @@ class SnakeGameHumanAgentScene(Scene):
             context.set_action(InputAction.Right)
     
     def process_input(self: Self, dt: float, context):
+        # dt is delta time in seconds since last frame, used for framerate-independent input processing.
         if dt == 0:
             context.process_action()
             return
