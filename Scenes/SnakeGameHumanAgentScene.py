@@ -9,6 +9,7 @@ class SnakeGameHumanAgentScene(Scene):
     def __init__(self):
         self.speed = 10 # input processes per second
         self.last_input_process = 0
+        self.game = SnakeGameLogic.SnakeGame()
     
     def collect_input(self: Self, context: SnakeGame):
         keys = pygame.key.get_pressed()

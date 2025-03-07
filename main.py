@@ -23,9 +23,9 @@ while running:
             screen = pygame.display.set_mode((screen_width, screen_width * aspect_ratio), pygame.RESIZABLE)
             gameManager.render_mode.set_scale(screen_width)
     
-    gameManager.scene.collect_input(gameManager.game)
-    gameManager.scene.process_input(dt, gameManager.game)
-    gameManager.render_mode.render_scene(screen, gameManager.game)
+    gameManager.scene.collect_input(gameManager.scene.game)
+    gameManager.scene.process_input(dt, gameManager.scene.game)
+    gameManager.render_mode.render_scene(screen, gameManager.scene.game)
 
     # flip() the display to put your work on screen
     pygame.display.flip()
