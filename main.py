@@ -21,7 +21,7 @@ while running:
         if event.type == pygame.VIDEORESIZE:
             screen_width = event.w
             screen = pygame.display.set_mode((screen_width, screen_width * aspect_ratio), pygame.RESIZABLE)
-            gameManager.render_mode.set_scale(screen_width)
+            gameManager.render_mode.set_scale(screen_width, gameManager.scene.game)
     
     gameManager.scene.collect_input(gameManager.scene.game)
     gameManager.scene.process_input(dt, gameManager.scene.game)
