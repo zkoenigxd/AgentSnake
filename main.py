@@ -1,5 +1,5 @@
 import pygame
-import GameManager as gm
+from Singlton import GAME_MANAGER
 
 # pygame setup
 pygame.init()
@@ -10,8 +10,6 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
-gameManager = gm.GameManager()
-
 while running:
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
@@ -21,11 +19,11 @@ while running:
         if event.type == pygame.VIDEORESIZE:
             screen_width = event.w
             screen = pygame.display.set_mode((screen_width, screen_width * aspect_ratio), pygame.RESIZABLE)
-            gameManager.render_mode.set_scale(screen_width, gameManager.scene.game)
+            GAME_MANAGER.render_mode.set_scale(screen_width, GAME_MANAGER.scene.game)
     
-    gameManager.scene.collect_input(gameManager.scene.game)
-    gameManager.scene.process_input(dt, gameManager.scene.game)
-    gameManager.render_mode.render_scene(screen, gameManager.scene.game)
+    GAME_MANAGER.scene.collect_input(GAME_MANAGER.scene.game)
+    GAME_MANAGER.scene.process_input(dt, GAME_MANAGER.scene.game)
+    GAME_MANAGER.render_mode.render_scene(screen, GAME_MANAGER.scene.game)
 
     # flip() the display to put your work on screen
     pygame.display.flip()
