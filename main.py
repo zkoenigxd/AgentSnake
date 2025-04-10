@@ -1,5 +1,6 @@
 import pygame
 from Singlton import GAME_MANAGER
+import Scenes.MainMenuScene as startScene
 
 # pygame setup
 pygame.init()
@@ -7,6 +8,10 @@ screen_width = 1280
 aspect_ratio = 9/16
 screen = pygame.display.set_mode((screen_width, screen_width * aspect_ratio), pygame.RESIZABLE)
 clock = pygame.time.Clock()
+
+# Initialize the game manager with the main menu scene
+GAME_MANAGER.initialize(startScene.MainMenuScene())
+
 running = True
 dt = 0
 
