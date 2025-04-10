@@ -10,7 +10,7 @@ screen = pygame.display.set_mode((screen_width, screen_width * aspect_ratio), py
 clock = pygame.time.Clock()
 
 # Initialize the game manager with the main menu scene
-GAME_MANAGER.initialize(startScene.MainMenuScene())
+GAME_MANAGER.initialize(startScene.MainMenuScene(), screen_width)
 
 running = True
 dt = 0
@@ -24,11 +24,11 @@ while running:
         if event.type == pygame.VIDEORESIZE:
             screen_width = event.w
             screen = pygame.display.set_mode((screen_width, screen_width * aspect_ratio), pygame.RESIZABLE)
-            GAME_MANAGER.render_mode.set_scale(screen_width, GAME_MANAGER.scene.game)
+            GAME_MANAGER.scene.set_scale(screen_width)
     
-    GAME_MANAGER.scene.collect_input(GAME_MANAGER.scene.game)
-    GAME_MANAGER.scene.process_input(dt, GAME_MANAGER.scene.game)
-    GAME_MANAGER.render_mode.render_scene(screen, GAME_MANAGER.scene.game)
+    GAME_MANAGER.scene.collect_input()
+    GAME_MANAGER.scene.process_input(dt)
+    GAME_MANAGER.scene.render_scene(screen)
 
     # flip() the display to put your work on screen
     pygame.display.flip()

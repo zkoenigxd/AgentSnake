@@ -2,7 +2,8 @@ from .Scene import Scene
 from typing import Self
 import pygame
 from Games import SnakeGameLogic
-from Games.SnakeGameLogic import SnakeGame, InputAction
+from Games.SnakeGameLogic import BlockState, InputAction
+from Singlton import GAME_MANAGER
 
 class SnakeGameHumanAgentScene(Scene):
 
@@ -11,29 +12,48 @@ class SnakeGameHumanAgentScene(Scene):
         self.last_input_process = 0
         self.game = SnakeGameLogic.SnakeGame()
     
-    def collect_input(self: Self, context: SnakeGame):
+    def collect_input(self: Self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_w] or keys[pygame.K_UP]:
-            context.set_action(InputAction.Up)
+            self.game.set_action(InputAction.Up)
         if keys[pygame.K_s] or keys[pygame.K_DOWN]:
-            context.set_action(InputAction.Down)
+            self.game.set_action(InputAction.Down)
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            context.set_action(InputAction.Left)
+            self.game.set_action(InputAction.Left)
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            context.set_action(InputAction.Right)
+            self.game.set_action(InputAction.Right)
     
-    def process_input(self: Self, dt: float, context):
+    def process_input(self: Self, dt: float):
         # dt is delta time in seconds since last frame, used for framerate-independent input processing.
         if dt == 0:
-            context.process_action()
+            self.game.process_action()
             return
         self.last_input_process += dt
         if self.last_input_process >= 1 / self.speed:
             self.last_input_process = 0
-            context.process_action()
+            self.game.process_action()
 
 
-    def set_input_pause(context: None):
+    def set_input_pause(context = GAME_MANAGER.scene.game):
         if pygame.MOUSEBUTTONUP:
             mouse_press_location = pygame.mouse.get_pos()
         return mouse_press_location
+    
+    def render_scene(self: Self, screen: pygame.Surface):
+        if self.game != None:
+            if self.game.is_dead == True:
+                screen.fill("red")
+            else:
+                screen.fill("black")
+                for x, row in enumerate(self.game.state_arr):
+                    for y, block in enumerate(row):
+                        if block == BlockState.Snake:
+                            pygame.draw.rect(screen, "white", pygame.Rect(y * block_size, x * block_size,block_size,block_size), 0, 3)
+                        if block == BlockState.Food:
+                            pygame.draw.rect(screen, "red", pygame.Rect(y * block_size, x * block_size,block_size,block_size), 0, 3)
+                        if block == BlockState.Obsticle:
+                            pygame.draw.rect(screen, "green", pygame.Rect(y * block_size, x * block_size,block_size,block_size), 0, 3)
+
+    def set_scale(self: Self, width : int):
+        global block_size 
+        block_size = width / self.game.cols

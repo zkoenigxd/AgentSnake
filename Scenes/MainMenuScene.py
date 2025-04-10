@@ -1,4 +1,5 @@
 from .Scene import Scene
+from typing import Self
 import pygame
 from UI.Button import Button
 from Singlton import GAME_MANAGER
@@ -36,9 +37,8 @@ class MainMenuScene(Scene):
             # For demonstration, we are only reacting to "Scene1". You may extend this logic.
             if event_data == "Scene1":
                 from Scenes import SnakeGameHumanAgentScene as gs
-                from RenderMode import RenderMode_Human
                 new_scene = gs.SnakeGameHumanAgentScene()
-                self.game_manager.changeScene(new_scene.game, RenderMode_Human(1280, new_scene.game), new_scene)
+                self.game_manager.changeScene(new_scene)
             else:
                 print("No associated scene for event:", event_data)
         else:
@@ -63,14 +63,14 @@ class MainMenuScene(Scene):
             x_position = margin + idx * (button_width + margin)
             button.rect = pygame.Rect(x_position, y_position, button_width, button_height)
 
-    def draw(self, screen):
+    def render_scene(self, screen):
         """Draws the main menu including background and buttons."""
         screen.fill((0, 0, 0))  # Clear screen with black.
         self.update_layout(screen)
         for button in self.buttons:
             button.draw(screen)
 
-    def collect_input(self, context):
+    def collect_input(self, context = GAME_MANAGER.scene):
         """Polls input: upon a fresh left mouse click, checks buttons for a hit and calls on_click()."""
         mouse_pressed = pygame.mouse.get_pressed()[0]
         if mouse_pressed and not self.mouse_down_previous:
@@ -80,6 +80,9 @@ class MainMenuScene(Scene):
                     button.on_click()  # Trigger the button's event.
         self.mouse_down_previous = mouse_pressed
 
-    def process_input(self, dt: float, context):
+    def process_input(self, dt: float, context = GAME_MANAGER.scene):
         """No time-dependent processing is needed for the main menu."""
+        pass
+
+    def set_scale(self: Self, width : int):
         pass
