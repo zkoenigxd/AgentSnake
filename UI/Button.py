@@ -5,7 +5,7 @@ class Button:
         """
         :param label: Text label for the button.
         :param callback: Optional function to call directly when clicked.
-        :param broadcast_value: Value to broadcast to subscribers when clicked.
+        :param broadcast_value: Value to broadcast to subscribers when clicked (optional).
         :param font_size: The font size of the button text.
         """
         self.label = label
@@ -16,16 +16,19 @@ class Button:
         self.subscribers = []  # List of functions to call on click.
 
     def subscribe(self, fn):
-        """Registers a callback function to be notified with self.broadcast_value when the button is clicked."""
+        """Registers a callback function to be notified when the button is clicked."""
         self.subscribers.append(fn)
 
     def on_click(self):
         """Should be called when the button is pressed. It first calls an optional direct callback,
-        then broadcasts its event value to all subscribers."""
+        then notifies all subscribers, passing broadcast_value only if it exists."""
         if self.callback:
             self.callback()
         for fn in self.subscribers:
-            fn(self.broadcast_value)
+            if self.broadcast_value is not None:
+                fn(self.broadcast_value)
+            else:
+                fn()
 
     def draw(self, screen):
         """Draws the button (background, border, and centered label) on the provided screen."""

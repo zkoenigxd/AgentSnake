@@ -8,41 +8,32 @@ class MainMenuScene(Scene):
     def __init__(self):
         self.buttons = []
         self.mouse_down_previous = False
-        # For rendering, "self.game" is set to self so that RenderMode_Human.render_scene(screen, self.game) calls our draw method.
-        self.game = self  
-        # Global GameManager should be set via set_game_manager (or be accessed via a global import).
+        self.game = self
         self.game_manager = GAME_MANAGER
 
-        # Create 4 buttons.
-        # Each button is given a broadcast value that could indicate which scene to switch to.
-        for i in range(4):
-            broadcast_value = f"Scene{i+1}"
-            # Here we don’t specify a direct callback; instead we subscribe with a handler.
-            button = Button(
-                label=f"Sample Button {i+1}",
-                broadcast_value=broadcast_value
-            )
-            # Subscribe MainMenuScene's event handler to the button.
-            button.subscribe(self.handle_button_event)
-            self.buttons.append(button)
+        # Create "snake game with human agent" button.
+        human_agent_button = Button(
+            label="Human Agent"
+        )
+        human_agent_button.subscribe(self.load_snake_game_human_agent)
+        self.buttons.append(human_agent_button)
 
-    def handle_button_event(self, event_data):
-        """
-        Handles button events. The event_data (broadcast by the button) can be used
-        to decide which scene to transition to.
-        In this demo, if the event_data is "Scene1", we change to the Snake game scene.
-        """
-        print(f"Button event received with data: {event_data}")
-        if self.game_manager is not None:
-            # For demonstration, we are only reacting to "Scene1". You may extend this logic.
-            if event_data == "Scene1":
-                from Scenes import SnakeGameHumanAgentScene as gs
-                new_scene = gs.SnakeGameHumanAgentScene()
-                self.game_manager.changeScene(new_scene)
-            else:
-                print("No associated scene for event:", event_data)
-        else:
-            print("GameManager reference not set in MainMenuScene.")
+        # Create "snake game with hamiltonian path agent" button.
+        hamiltonian_path_button = Button(
+            label="Hamiltonian Path Agent"
+        )
+        hamiltonian_path_button.subscribe(self.load_snake_game_hamiltonian_path_agent)
+        self.buttons.append(hamiltonian_path_button)
+
+    def load_snake_game_human_agent(self):
+        from Scenes import SnakeGameHumanAgentScene as gs
+        new_scene = gs.SnakeGameHumanAgentScene()
+        self.game_manager.changeScene(new_scene)
+    
+    def load_snake_game_hamiltonian_path_agent(self):
+        from Scenes import SnakeGameHamiltonianPathAgentScene as gs
+        new_scene = gs.SnakeGameHamiltonianPathAgentScene()
+        self.game_manager.changeScene(new_scene)
 
     def update_layout(self, screen):
         """
