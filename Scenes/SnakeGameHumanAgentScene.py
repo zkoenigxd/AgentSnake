@@ -4,6 +4,7 @@ import pygame
 from Games import SnakeGameLogic
 from Games.SnakeGameLogic import BlockState, InputAction
 from Singlton import GAME_MANAGER
+from UI.Button import Button
 
 class SnakeGameHumanAgentScene(Scene):
 
@@ -11,6 +12,8 @@ class SnakeGameHumanAgentScene(Scene):
         self.speed = 10 # input processes per second
         self.last_input_process = 0
         self.game = SnakeGameLogic.SnakeGame()
+        self.restart_button = None
+        self.mouse_down_previous = False
     
     def collect_input(self: Self):
         keys = pygame.key.get_pressed()
@@ -42,7 +45,7 @@ class SnakeGameHumanAgentScene(Scene):
     def render_scene(self: Self, screen: pygame.Surface):
         if self.game != None:
             if self.game.is_dead == True:
-                screen.fill("red")
+                self.end_game(screen)
             else:
                 screen.fill("black")
                 for x, row in enumerate(self.game.state_arr):
@@ -53,6 +56,54 @@ class SnakeGameHumanAgentScene(Scene):
                             pygame.draw.rect(screen, "red", pygame.Rect(y * block_size, x * block_size,block_size,block_size), 0, 3)
                         if block == BlockState.Obsticle:
                             pygame.draw.rect(screen, "green", pygame.Rect(y * block_size, x * block_size,block_size,block_size), 0, 3)
+
+    def end_game(self: Self, screen: pygame.Surface):
+        screen.fill("red")
+        
+        # Display game over text
+        font = pygame.font.SysFont("Arial", 48)
+        game_over_text = font.render("Game Over", True, (255, 255, 255))
+        score_text = font.render(f"Score: {self.game.score}", True, (255, 255, 255))
+        time_text = font.render(f"Time: {self.game.get_elapsed_time():.1f}s", True, (255, 255, 255))
+        
+        screen_width, screen_height = screen.get_size()
+        game_over_rect = game_over_text.get_rect(center=(screen_width // 2, screen_height // 2 - 100))
+        score_rect = score_text.get_rect(center=(screen_width // 2, screen_height // 2))
+        time_rect = time_text.get_rect(center=(screen_width // 2, screen_height // 2 + 50))
+        
+        screen.blit(game_over_text, game_over_rect)
+        screen.blit(score_text, score_rect)
+        screen.blit(time_text, time_rect)
+        
+        # Create restart button if it doesn't exist
+        if self.restart_button is None:
+            self.restart_button = Button(
+                label="Restart Game",
+                callback=self.restart_game
+            )
+            
+            # Position the button in the center of the screen
+            button_width = 200
+            button_height = 50
+            x_position = (screen_width - button_width) // 2
+            y_position = screen_height // 2 + 150
+            self.restart_button.rect = pygame.Rect(x_position, y_position, button_width, button_height)
+        
+        # Draw the restart button
+        self.restart_button.draw(screen)
+        
+        # Check for button clicks
+        mouse_pressed = pygame.mouse.get_pressed()[0]
+        if mouse_pressed and not self.mouse_down_previous:
+            mouse_pos = pygame.mouse.get_pos()
+            if self.restart_button.rect.collidepoint(mouse_pos):
+                self.restart_button.on_click()
+        self.mouse_down_previous = mouse_pressed
+
+    def restart_game(self):
+        """Reset the game when the restart button is clicked"""
+        self.game.reset()
+        self.last_input_process = 0
 
     def set_scale(self: Self, width : int):
         global block_size 
