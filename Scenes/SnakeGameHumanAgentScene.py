@@ -11,7 +11,7 @@ class SnakeGameHumanAgentScene(Scene):
     def __init__(self):
         self.speed = 10 # input processes per second
         self.last_input_process = 0
-        self.game = SnakeGameLogic.SnakeGame()
+        self.game = SnakeGameLogic.SnakeGame("human")
         self.restart_button = None
         self.mouse_down_previous = False
     
@@ -56,24 +56,43 @@ class SnakeGameHumanAgentScene(Scene):
                             pygame.draw.rect(screen, "red", pygame.Rect(y * block_size, x * block_size,block_size,block_size), 0, 3)
                         if block == BlockState.Obsticle:
                             pygame.draw.rect(screen, "green", pygame.Rect(y * block_size, x * block_size,block_size,block_size), 0, 3)
+                
+                # Display game stats
+                font = pygame.font.SysFont("Arial", 24)
+                score_text = font.render(f"Score: {self.game.score}", True, (255, 255, 255))
+                time_text = font.render(f"Time: {self.game.get_elapsed_time():.1f}s", True, (255, 255, 255))
+                high_score_text = font.render(f"High Score: {self.game.get_high_score()}", True, (255, 255, 255))
+                
+                # Position stats in top-left corner with 10px padding
+                screen.blit(score_text, (10, 10))
+                screen.blit(time_text, (10, 40))
+                screen.blit(high_score_text, (10, 70))
 
     def end_game(self: Self, screen: pygame.Surface):
         screen.fill("red")
         
-        # Display game over text
+        # Display game over text and stats
         font = pygame.font.SysFont("Arial", 48)
         game_over_text = font.render("Game Over", True, (255, 255, 255))
         score_text = font.render(f"Score: {self.game.score}", True, (255, 255, 255))
         time_text = font.render(f"Time: {self.game.get_elapsed_time():.1f}s", True, (255, 255, 255))
+        high_score_text = font.render(f"High Score: {self.game.get_high_score()}", True, (255, 255, 255))
+        total_time_text = font.render(f"Total Time: {self.game.get_total_time():.1f}s", True, (255, 255, 255))
+
         
         screen_width, screen_height = screen.get_size()
-        game_over_rect = game_over_text.get_rect(center=(screen_width // 2, screen_height // 2 - 100))
-        score_rect = score_text.get_rect(center=(screen_width // 2, screen_height // 2))
-        time_rect = time_text.get_rect(center=(screen_width // 2, screen_height // 2 + 50))
+        game_over_rect = game_over_text.get_rect(center=(screen_width // 2, screen_height // 2 - 150))
+        score_rect = score_text.get_rect(center=(screen_width // 2, screen_height // 2 - 50))
+        time_rect = time_text.get_rect(center=(screen_width // 2, screen_height // 2))
+        high_score_rect = high_score_text.get_rect(center=(screen_width // 2, screen_height // 2 + 50))
+        total_time_rect = total_time_text.get_rect(center=(screen_width // 2, screen_height // 2 + 100))
+
         
         screen.blit(game_over_text, game_over_rect)
         screen.blit(score_text, score_rect)
         screen.blit(time_text, time_rect)
+        screen.blit(high_score_text, high_score_rect)
+        screen.blit(total_time_text, total_time_rect)
         
         # Create restart button if it doesn't exist
         if self.restart_button is None:
@@ -86,7 +105,7 @@ class SnakeGameHumanAgentScene(Scene):
             button_width = 200
             button_height = 50
             x_position = (screen_width - button_width) // 2
-            y_position = screen_height // 2 + 150
+            y_position = screen_height // 2 + 200  # Moved down to accommodate new stats
             self.restart_button.rect = pygame.Rect(x_position, y_position, button_width, button_height)
         
         # Draw the restart button
