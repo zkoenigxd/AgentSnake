@@ -4,6 +4,7 @@ import Scenes.MainMenuScene as startScene
 
 # pygame setup
 pygame.init()
+pygame.font.init()  # Ensure the font module is initialized
 screen_width = 1280
 aspect_ratio = 9/16
 screen = pygame.display.set_mode((screen_width, screen_width * aspect_ratio), pygame.RESIZABLE)

@@ -25,6 +25,13 @@ class MainMenuScene(Scene):
         hamiltonian_path_button.subscribe(self.load_snake_game_hamiltonian_path_agent)
         self.buttons.append(hamiltonian_path_button)
 
+        # Create "snake game with reinforcement learning agent" button.
+        rl_agent_button = Button(
+            label="Reinforcement Learning Agent"
+        )
+        rl_agent_button.subscribe(self.load_snake_game_rl_agent)
+        self.buttons.append(rl_agent_button)
+
     def load_snake_game_human_agent(self):
         from Scenes import SnakeGameHumanAgentScene as gs
         new_scene = gs.SnakeGameHumanAgentScene()
@@ -33,6 +40,11 @@ class MainMenuScene(Scene):
     def load_snake_game_hamiltonian_path_agent(self):
         from Scenes import SnakeGameHamiltonianPathAgentScene as gs
         new_scene = gs.SnakeGameHamiltonianPathAgentScene()
+        self.game_manager.changeScene(new_scene)
+
+    def load_snake_game_rl_agent(self):
+        from Scenes import SnakeGameRLAgent as rl
+        new_scene = rl.SnakeGameRLAgent()
         self.game_manager.changeScene(new_scene)
 
     def update_layout(self, screen):
