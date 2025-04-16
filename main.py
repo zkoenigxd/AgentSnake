@@ -4,8 +4,8 @@ import Scenes.MainMenuScene as startScene
 
 # pygame setup
 pygame.init()
-screen_width = 1280
-aspect_ratio = 9/16
+screen_width = 600
+aspect_ratio = 4/3
 screen = pygame.display.set_mode((screen_width, screen_width * aspect_ratio), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 

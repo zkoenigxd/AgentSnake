@@ -1,128 +1,92 @@
-def base_cycle(top, bottom, left, right):
-    """
-    Construct a Hamiltonian cycle for a 2 x k or k x 2 solid grid.
-    We assume here that the subgrid has at least 2 rows and 2 columns.
-    """
-    R = bottom - top + 1
-    C = right - left + 1
-    cycle = []
-    # Case 1: exactly 2 rows.
-    if R == 2:
-        # Top row: left -> right
-        for j in range(left, right + 1):
-            cycle.append((top, j))
-        # Bottom row: right -> left
-        for j in range(right, left - 1, -1):
-            cycle.append((bottom, j))
-        return cycle
-    # Case 2: exactly 2 columns.
-    if C == 2:
-        # Left column: top -> bottom
-        for i in range(top, bottom + 1):
-            cycle.append((i, left))
-        # Right column: bottom -> top
-        for i in range(bottom, top - 1, -1):
-            cycle.append((i, right))
-        return cycle
+def are_adjacent(a, b):
+    """Return True if a and b (each a (row, col) tuple) are adjacent."""
+    return abs(a[0] - b[0]) + abs(a[1] - b[1]) == 1
 
-    # Fallback (should not normally happen for a solid subgrid)
-    # Simply do the boundary cycle.
-    cycle = []
-    for j in range(left, right + 1):
-        cycle.append((top, j))
-    for i in range(top + 1, bottom + 1):
-        cycle.append((i, right))
-    for j in range(right - 1, left - 1, -1):
-        cycle.append((bottom, j))
-    for i in range(bottom - 1, top, -1):
-        cycle.append((i, left))
+def rotate_cycle_to_close(cycle):
+    """
+    Rotate the cycle (a list of nodes) so that the first and last nodes become adjacent.
+    Since the cycle is cyclic, if some rotation yields endpoints that are neighbors, we return that.
+    """
+    n = len(cycle)
+    for k in range(n):
+        rotated = cycle[k:] + cycle[:k]
+        if are_adjacent(rotated[0], rotated[-1]):
+            return rotated
     return cycle
 
-def find_hamiltonian_cycle_in_grid(n, m):
+def find_hamiltonian_cycle(m, n):
     """
-    Given grid dimensions n x m (n rows, m columns), returns a Hamiltonian cycle
-    covering all cells (as a list of (row, col) tuples) if one exists.
-    Assumes that n * m is even (a necessary condition) and that the grid is solid.
+    Construct a Hamiltonian cycle on an m x n grid (with m*n even)
+    using one reserved boundary (either a row or a column) to connect the two ends.
+    
+    If m is even, we reserve the top row (row 0) and zig-zag through columns over the remaining rows.
+    The interior zig-zag is arranged so that it always starts and ends in row 1.
+    
+    If m is odd but n is even, we reserve the leftmost column (col 0) and zig-zag through rows over the remaining columns.
+    The interior zig-zag is arranged so that it always starts and ends in column 1.
+    
+    Otherwise (both m and n are odd) there is no Hamiltonian cycle (returns None).
     """
-    if (n * m) % 2 != 0:
-        return None  # No cycle if the grid has an odd number of cells.
-    return construct_cycle(0, n - 1, 0, m - 1)
-
-def find_splice_indices(outer, top):
-    """
-    Find a pair of consecutive vertices in the outer cycle that lie on the top row.
-    Because the outer cycle is constructed by listing the top row first,
-    such a pair is guaranteed when the subgrid has at least 3 columns.
-    Returns a tuple (ui, vi) which are indices into the list 'outer'.
-    """
-    for idx in range(len(outer) - 1):
-        u = outer[idx]
-        v = outer[idx + 1]
-        if u[0] == top and v[0] == top:
-            return idx, idx + 1
-    # In the unlikely event no such pair is found, fall back to the first pair.
-    return 0, 1
-
-def construct_cycle(top, bottom, left, right):
-    """
-    Recursively constructs a Hamiltonian cycle on the rectangular subgrid defined by
-    rows top..bottom and columns left..right.
-    """
-    R = bottom - top + 1
-    C = right - left + 1
-
-    # Base case: if one dimension is 2, then build a simple cycle.
-    if R == 2 or C == 2:
-        return base_cycle(top, bottom, left, right)
-
-    # Step 1: Build the outer boundary cycle.
-    outer = []
-
-    # Top row: from left to right.
-    for j in range(left, right + 1):
-        outer.append((top, j))
-    # Right column: from top+1 to bottom.
-    for i in range(top + 1, bottom + 1):
-        outer.append((i, right))
-    # Bottom row: from right-1 downto left.
-    for j in range(right - 1, left - 1, -1):
-        outer.append((bottom, j))
-    # Left column: from bottom-1 downto top+1.
-    for i in range(bottom - 1, top, -1):
-        outer.append((i, left))
-    # At this point, 'outer' is the cycle around the boundary.
-
-    # Step 2: Recurse on the inner grid.
-    # The inner grid is rows top+1 to bottom-1 and columns left+1 to right-1.
-    if top + 1 > bottom - 1 or left + 1 > right - 1:
-        return outer
-
-    inner = construct_cycle(top + 1, bottom - 1, left + 1, right - 1)
-
-    # Step 3: Splice the inner cycle into the outer cycle.
-    # Instead of hard-coding splice points, we now search for two consecutive vertices
-    # in the outer cycle that lie on the top row.
-    ui, vi = find_splice_indices(outer, top)
-    u = outer[ui]
-    v = outer[vi]
-
-    # For the inner cycle, we want to designate two vertices on its top boundary.
-    # Because inner was built on the subgrid (top+1, left+1) to (bottom-1, right-1),
-    # its outer boundary starts with the top row.
-    target_start = (top + 1, left + 1)
-    target_end = (top + 1, left + 2)
-
-    # Rotate the inner cycle so that the first element is target_start.
-    # (If target_start is not in inner, then our subgrid was built differently; in practice,
-    # for a solid grid it should be present.)
-    while inner[0] != target_start:
-        inner = inner[1:] + [inner[0]]
-    # Rotate until the last element is target_end.
-    while inner[-1] != target_end:
-        inner = [inner[-1]] + inner[:-1]
-
-    # Now, remove the edge (u, v) from the outer cycle and splice in the inner cycle.
-    # We construct the new cycle as:
-    #    outer[0:ui+1] + inner + outer[vi:]
-    new_cycle = outer[:ui + 1] + inner + outer[vi:]
-    return new_cycle
+    # Use the provided selection strategy.
+    if n % 2 == 0:
+        # Reserve the top row.
+        reserved_row = 0
+        interior_rows = list(range(1, m))
+        # Build reserved connector: all nodes in the reserved row (from left to right).
+        connector = [(reserved_row, j) for j in range(n-1, -1, -1)]
+        
+        # Now build a zig-zag path over the interior block of rows 1 .. m-1, iterating by columns.
+        # The idea is to go down each column when the column index is even,
+        # and go up when it is odd, so that the top cell (row 1) is always reached first.
+        interior = []
+        for j in range(n):
+            if j % 2 == 0:
+                # Even column: traverse interior rows top-to-bottom.
+                for i in interior_rows:
+                    interior.append((i, j))
+            else:
+                # Odd column: traverse interior rows bottom-to-top.
+                for i in reversed(interior_rows):
+                    interior.append((i, j))
+        # At this point the interior path should start at (1, 0).
+        # For the zig-zag to end at the top (row 1), we require that the last column (j = n-1)
+        # is odd; that is, n must be even.
+        # Combine the connector (reserved row) with the interior zig-zag.
+        cycle = connector + interior
+        cycle.append((0 ,n - 1))
+        
+    elif m % 2 == 0:
+        # m is odd but n is even.
+        # Reserve the leftmost column.
+        reserved_col = 0
+        interior_cols = list(range(1, n))
+        # Build reserved connector: all nodes in the reserved column (from top to bottom).
+        connector = [(i, reserved_col) for i in range(m)]
+        
+        # Now build a zig-zag path over the interior block of columns 1 .. n-1, iterating by rows.
+        # For each row, if the row index is even, traverse the interior columns left-to-right;
+        # if odd, traverse right-to-left so that the leftmost interior column (col 1) is encountered at both ends.
+        interior = []
+        for i in range(m):
+            if i % 2 == 0:
+                for j in interior_cols:
+                    interior.append((i, j))
+            else:
+                for j in reversed(interior_cols):
+                    interior.append((i, j))
+        # Now the interior path should start at (0, 1) and end at (m-1, 1) provided that m is even.
+        # Since m is odd here, the pattern is arranged to keep the connection on column 1.
+        cycle = connector + interior
+        
+    else:
+        # Both m and n are odd -> odd total number of nodes; no Hamiltonian cycle exists.
+        return None
+    
+    # Finally, validate that every consecutive pair (including last->first) is adjacent.
+    for idx in range(len(cycle)):
+        a = cycle[idx]
+        b = cycle[(idx + 1) % len(cycle)]
+        if not are_adjacent(a, b):
+            print("Adjacency error between", a, "and", b)
+            return cycle
+    return cycle

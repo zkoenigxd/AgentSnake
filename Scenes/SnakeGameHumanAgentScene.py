@@ -13,7 +13,9 @@ class SnakeGameHumanAgentScene(Scene):
         self.last_input_process = 0
         self.game = SnakeGameLogic.SnakeGame("human")
         self.restart_button = None
+        self.main_menu_button = None
         self.mouse_down_previous = False
+        self.game_manager = GAME_MANAGER
     
     def collect_input(self: Self):
         keys = pygame.key.get_pressed()
@@ -43,80 +45,125 @@ class SnakeGameHumanAgentScene(Scene):
         return mouse_press_location
     
     def render_scene(self: Self, screen: pygame.Surface):
-        if self.game != None:
-            if self.game.is_dead == True:
+        if self.game is not None:
+            if self.game.is_dead:
                 self.end_game(screen)
             else:
+                # Fill the background.
                 screen.fill("black")
+                
+                # --- Define the grid drawing area ---
+                # These offsets ensure that the grid is not drawn at the very edge,
+                # leaving room for a border and score readouts.
+                game_offset_x = 10
+                game_offset_y = 10
+                game_width = self.game.cols * block_size
+                game_height = self.game.rows * block_size
+                
+                # --- Draw the grid blocks ---
+                # Adjust each block's position based on the game area offsets.
                 for x, row in enumerate(self.game.state_arr):
                     for y, block in enumerate(row):
+                        rect = pygame.Rect(
+                            game_offset_x + y * block_size,
+                            game_offset_y + x * block_size,
+                            block_size,
+                            block_size
+                        )
                         if block == BlockState.Snake:
-                            pygame.draw.rect(screen, "white", pygame.Rect(y * block_size, x * block_size,block_size,block_size), 0, 3)
-                        if block == BlockState.Food:
-                            pygame.draw.rect(screen, "red", pygame.Rect(y * block_size, x * block_size,block_size,block_size), 0, 3)
-                        if block == BlockState.Obsticle:
-                            pygame.draw.rect(screen, "green", pygame.Rect(y * block_size, x * block_size,block_size,block_size), 0, 3)
+                            pygame.draw.rect(screen, "white", rect, 0, 3)
+                        elif block == BlockState.Food:
+                            pygame.draw.rect(screen, "red", rect, 0, 3)
+                        elif block == BlockState.Obsticle:
+                            pygame.draw.rect(screen, "green", rect, 0, 3)
                 
-                # Display game stats
+                # --- Draw a border around the grid ---
+                # The border is drawn with a padding so it doesn't overlap the grid blocks.
+                border_padding = 5  # adjust as needed
+                border_rect = pygame.Rect(
+                    game_offset_x - border_padding,
+                    game_offset_y - border_padding,
+                    game_width + 2 * border_padding,
+                    game_height + 2 * border_padding
+                )
+                pygame.draw.rect(screen, "white", border_rect, 3)
+                
+                # --- Draw the score readouts outside the grid ---
+                # Here, we choose to render the score information below the grid.
+                stats_offset_y = game_offset_y + game_height + 10
                 font = pygame.font.SysFont("Arial", 24)
                 score_text = font.render(f"Score: {self.game.score}", True, (255, 255, 255))
                 time_text = font.render(f"Time: {self.game.get_elapsed_time():.1f}s", True, (255, 255, 255))
                 high_score_text = font.render(f"High Score: {self.game.get_high_score()}", True, (255, 255, 255))
                 
-                # Position stats in top-left corner with 10px padding
-                screen.blit(score_text, (10, 10))
-                screen.blit(time_text, (10, 40))
-                screen.blit(high_score_text, (10, 70))
-
+                screen.blit(score_text, (game_offset_x, stats_offset_y))
+                screen.blit(time_text, (game_offset_x, stats_offset_y + 30))
+                screen.blit(high_score_text, (game_offset_x, stats_offset_y + 60))
+                
     def end_game(self: Self, screen: pygame.Surface):
+        # Fill the background with a solid color.
         screen.fill("red")
         
-        # Display game over text and stats
+        # Obtain screen dimensions.
+        screen_width, screen_height = screen.get_size()
+        
+        # Display game over text and stats in the upper half of the screen.
         font = pygame.font.SysFont("Arial", 48)
         game_over_text = font.render("Game Over", True, (255, 255, 255))
-        score_text = font.render(f"Score: {self.game.score}", True, (255, 255, 255))
-        time_text = font.render(f"Time: {self.game.get_elapsed_time():.1f}s", True, (255, 255, 255))
-        high_score_text = font.render(f"High Score: {self.game.get_high_score()}", True, (255, 255, 255))
-        total_time_text = font.render(f"Total Time: {self.game.get_total_time():.1f}s", True, (255, 255, 255))
-
+        font_small = pygame.font.SysFont("Arial", 24)
+        score_text = font_small.render(f"Score: {self.game.score}", True, (255, 255, 255))
+        time_text = font_small.render(f"Time: {self.game.get_elapsed_time():.1f}s", True, (255, 255, 255))
+        high_score_text = font_small.render(f"High Score: {self.game.get_high_score()}", True, (255, 255, 255))
+        total_time_text = font_small.render(f"Total Time: {self.game.get_total_time():.1f}s", True, (255, 255, 255))
         
-        screen_width, screen_height = screen.get_size()
+        # Center the game over text near the top half.
         game_over_rect = game_over_text.get_rect(center=(screen_width // 2, screen_height // 2 - 150))
-        score_rect = score_text.get_rect(center=(screen_width // 2, screen_height // 2 - 50))
-        time_rect = time_text.get_rect(center=(screen_width // 2, screen_height // 2))
-        high_score_rect = high_score_text.get_rect(center=(screen_width // 2, screen_height // 2 + 50))
-        total_time_rect = total_time_text.get_rect(center=(screen_width // 2, screen_height // 2 + 100))
-
-        
         screen.blit(game_over_text, game_over_rect)
-        screen.blit(score_text, score_rect)
-        screen.blit(time_text, time_rect)
-        screen.blit(high_score_text, high_score_rect)
-        screen.blit(total_time_text, total_time_rect)
         
-        # Create restart button if it doesn't exist
+        # Place the stats below the "Game Over" text but away from the game area.
+        stats_y = game_over_rect.bottom + 10
+        screen.blit(score_text, (screen_width // 2 - score_text.get_width() // 2, stats_y))
+        screen.blit(time_text, (screen_width // 2 - time_text.get_width() // 2, stats_y + 40))
+        screen.blit(high_score_text, (screen_width // 2 - high_score_text.get_width() // 2, stats_y + 80))
+        screen.blit(total_time_text, (screen_width // 2 - total_time_text.get_width() // 2, stats_y + 120))
+
+        # --- Create/reset buttons with updated positions ---
+        # Restart Button:
+        button_width = 200
+        button_height = 50
+        window_width, window_height = screen.get_size()
+        y_position = window_height // 1.5 - button_height // 2
+        restart_x = (screen_width - button_width) // 2
+        # Position the restart button below the stats.
+        restart_y = y_position
         if self.restart_button is None:
             self.restart_button = Button(
                 label="Restart Game",
                 callback=self.restart_game
             )
-            
-            # Position the button in the center of the screen
-            button_width = 200
-            button_height = 50
-            x_position = (screen_width - button_width) // 2
-            y_position = screen_height // 2 + 200  # Moved down to accommodate new stats
-            self.restart_button.rect = pygame.Rect(x_position, y_position, button_width, button_height)
+        self.restart_button.rect = pygame.Rect(restart_x, restart_y, button_width, button_height)
         
-        # Draw the restart button
+        # Main Menu Button:
+        menu_y = restart_y + button_height + 10  # position below the restart button
+        if self.main_menu_button is None:
+            self.main_menu_button = Button(
+                label="Main Menu",
+                callback=self.load_main_menu
+            )
+        self.main_menu_button.rect = pygame.Rect(restart_x, menu_y, button_width, button_height)
+        
+        # Draw the buttons.
         self.restart_button.draw(screen)
+        self.main_menu_button.draw(screen)
         
-        # Check for button clicks
+        # Check for button clicks.
         mouse_pressed = pygame.mouse.get_pressed()[0]
         if mouse_pressed and not self.mouse_down_previous:
             mouse_pos = pygame.mouse.get_pos()
             if self.restart_button.rect.collidepoint(mouse_pos):
                 self.restart_button.on_click()
+            if self.main_menu_button.rect.collidepoint(mouse_pos):
+                self.main_menu_button.on_click()
         self.mouse_down_previous = mouse_pressed
 
     def restart_game(self):
@@ -124,6 +171,11 @@ class SnakeGameHumanAgentScene(Scene):
         self.game.reset()
         self.last_input_process = 0
 
+    def load_main_menu(self):
+        from Scenes import MainMenuScene as mm
+        new_scene = mm.MainMenuScene()
+        self.game_manager.changeScene(new_scene)
+
     def set_scale(self: Self, width : int):
         global block_size 
-        block_size = width / self.game.cols
+        block_size = (width - 20) / self.game.cols
