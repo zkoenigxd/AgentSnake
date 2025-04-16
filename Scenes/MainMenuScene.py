@@ -49,21 +49,34 @@ class MainMenuScene(Scene):
 
     def update_layout(self, screen):
         """
-        Recalculates button positions and sizes based on the current window dimensions.
-        Buttons are arranged in a row with a constant margin.
+        Recalculates button positions based on a grid layout with two columns per row.
+        If the number of buttons is odd, the extra button is placed on the left.
         """
+        import math
         window_width, window_height = screen.get_size()
         num_buttons = len(self.buttons)
-        margin = 20  # Margin between buttons and edges.
-        total_margin = margin * (num_buttons + 1)
-        available_width = window_width - total_margin
-        button_width = available_width // num_buttons if num_buttons > 0 else 0
-        # Use 1/10 of the window height for the button height.
-        button_height = window_height // 10
-        y_position = window_height // 2 - button_height // 2
-
+        columns = 2
+        rows = math.ceil(num_buttons / columns)
+        
+        # Define a margin (space between buttons and window edges)
+        margin = 20
+        
+        # Compute available width and height for the button grid.
+        # Here we assume the grid spans nearly the whole window minus fixed margins.
+        available_width = window_width - 2 * margin  # left/right margin
+        available_height = window_height - 2 * margin  # top/bottom margin
+        
+        # Compute each button's width and height.
+        # Also include additional horizontal spacing (margin between columns).
+        button_width = (available_width - margin * (columns - 1)) // columns
+        button_height = min(100, (available_height - margin * (rows - 1)) // rows)
+        
+        # Position each button in the grid.
         for idx, button in enumerate(self.buttons):
-            x_position = margin + idx * (button_width + margin)
+            row_index = idx // columns
+            col_index = idx % columns
+            x_position = margin + col_index * (button_width + margin)
+            y_position = margin + row_index * (button_height + margin)
             button.rect = pygame.Rect(x_position, y_position, button_width, button_height)
 
     def render_scene(self, screen):
