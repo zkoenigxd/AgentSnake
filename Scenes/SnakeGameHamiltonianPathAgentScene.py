@@ -18,6 +18,8 @@ class SnakeGameHamiltonianPathAgentScene(Scene):
         self.game = SnakeGameLogic.SnakeGame("hamiltonian", self.rows, self.cols)
         self.restart_button = None
         self.main_menu_button = None
+        self.speed_increase_button = None
+        self.speed_decrease_button = None
         self.mouse_down_previous = False
         self.game_manager = GAME_MANAGER
         
@@ -110,6 +112,10 @@ class SnakeGameHamiltonianPathAgentScene(Scene):
             mouse_pos = pygame.mouse.get_pos()
             if self.main_menu_button is not None and self.main_menu_button.rect.collidepoint(mouse_pos):
                 self.main_menu_button.on_click()
+            if self.speed_decrease_button is not None and self.speed_decrease_button.rect.collidepoint(mouse_pos):
+                self.speed_decrease_button.on_click()
+            if self.speed_increase_button is not None and self.speed_increase_button.rect.collidepoint(mouse_pos):
+                self.speed_increase_button.on_click()
         self.mouse_down_previous = mouse_pressed
     
     def process_game_step(self):
@@ -208,6 +214,52 @@ class SnakeGameHamiltonianPathAgentScene(Scene):
                 #self.main_menu_button.rect = pygame.Rect(game_width - game_offset_x, menu_y, button_width, button_height)
                 self.main_menu_button.rect = pygame.Rect(menu_x, menu_y, button_width, button_height)
                 self.main_menu_button.draw(screen)
+
+                # --- Place the Speed Control Buttons Below the Main Menu Button ---
+            # Define a small gap between rows.
+            vertical_gap = 10
+            speed_buttons_y = menu_y + button_height + vertical_gap
+            
+            # We'll arrange two buttons in a single row. Their total width equals the Main Menu button's width.
+            speed_button_margin = 10  # gap between the two speed buttons
+            speed_button_width = (button_width - speed_button_margin) // 2
+            speed_button_height = button_height
+            
+            # Left button: decrease speed ("Slow")
+            if self.speed_decrease_button is None:
+                self.speed_decrease_button = Button(
+                    label="Slow",
+                    callback=self.decrease_speed
+                )
+            speed_decrease_x = menu_x  # left column of the two-speed buttons
+            self.speed_decrease_button.rect = pygame.Rect(speed_decrease_x, speed_buttons_y, speed_button_width, speed_button_height)
+            self.speed_decrease_button.draw(screen)
+            
+            # Right button: increase speed ("Fast")
+            if self.speed_increase_button is None:
+                self.speed_increase_button = Button(
+                    label="Fast",
+                    callback=self.increase_speed
+                )
+            speed_increase_x = menu_x + speed_button_width + speed_button_margin
+            self.speed_increase_button.rect = pygame.Rect(speed_increase_x, speed_buttons_y, speed_button_width, speed_button_height)
+            self.speed_increase_button.draw(screen)
+            
+    def decrease_speed(self):
+        """
+        Decrease the game speed, but do not let it go below a minimum value.
+        """
+        # Decrease speed by 5 (or any step you choose), ensuring a minimum of 5.
+        self.speed = max(1, self.speed - 5)
+        print(f"Speed decreased to {self.speed}")
+
+    def increase_speed(self):
+        """
+        Increase the game speed.
+        """
+        # Increase speed by 5.
+        self.speed = min(200, self.speed + 5)
+        print(f"Speed increased to {self.speed}")
 
     def visualize_path(self, screen):
         """
