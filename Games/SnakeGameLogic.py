@@ -122,6 +122,12 @@ class SnakeGame:
     def save_game(self: Self, save_id: str, attempts: int, score: int, elapsed_time: float):
         """
         Save game statistics to a CSV file in the SaveData folder.
+                
+        Args:
+            save_id: Identifier for the save (e.g., 'human', 'hamiltonian')
+            attempts: Number of attempts made
+            score: Final score achieved
+            elapsed_time: Time taken to achieve the score (in seconds)
         """
         # Create SaveData directory if it doesn't exist
         save_dir = "SaveData"
@@ -141,7 +147,6 @@ class SnakeGame:
         # Add current attempt's time to total time
         self.total_time += self.elapsed_time
         
-        # Write the data first
         with open(filename, 'a', newline='') as f:
             writer = csv.writer(f)
             # Write header if file is new

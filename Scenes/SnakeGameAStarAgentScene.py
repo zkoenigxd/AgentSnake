@@ -13,7 +13,7 @@ class SnakeGameAStarAgentScene(Scene):
         self.path = []
         self.tail_position = None
         self.last_input_process = 0
-        self.speed = 90
+        self.speed = 10
         # Initialize for the first path
         self.create_path()
     
