@@ -25,6 +25,13 @@ class MainMenuScene(Scene):
         hamiltonian_path_button.subscribe(self.load_snake_game_hamiltonian_path_agent)
         self.buttons.append(hamiltonian_path_button)
 
+        # Create "A*" button.
+        a_star_button = Button(
+            label="A* Path Agent"
+        )
+        a_star_button.subscribe(self.load_snake_game_a_star_agent)
+        self.buttons.append(a_star_button)
+
     def load_snake_game_human_agent(self):
         from Scenes import SnakeGameHumanAgentScene as gs
         new_scene = gs.SnakeGameHumanAgentScene()
@@ -33,6 +40,11 @@ class MainMenuScene(Scene):
     def load_snake_game_hamiltonian_path_agent(self):
         from Scenes import SnakeGameHamiltonianPathAgentScene as gs
         new_scene = gs.SnakeGameHamiltonianPathAgentScene()
+        self.game_manager.changeScene(new_scene)
+
+    def load_snake_game_a_star_agent(self):
+        from Scenes import SnakeGameAStarAgentScene as gs
+        new_scene = gs.SnakeGameAStarAgentScene()
         self.game_manager.changeScene(new_scene)
 
     def update_layout(self, screen):

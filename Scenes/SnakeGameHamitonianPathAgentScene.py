@@ -9,7 +9,6 @@ class SnakeGameHumanAgentScene(Scene):
     def __init__(self):
         self.game = SnakeGameLogic.SnakeGame()
         self.path = createHamiltonianPath(self.game)
-
     
     def collect_input(self: Self, context: SnakeGame):
         nextState = self.path[location]
