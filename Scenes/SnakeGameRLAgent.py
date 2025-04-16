@@ -1,15 +1,18 @@
+from .Scene import Scene
 import pygame  
+from typing import Self
 import numpy as np
 from .Scene import Scene
 from Games.SnakeGameLogic import SnakeGame, InputAction, BlockState
 from Singlton import GAME_MANAGER
+from UI.Button import Button
 
 
 class SnakeGameRLAgent(Scene):
     def __init__(self):
         # Initialize the Snake game
         self.game = SnakeGame("rl_agent")
-
+        self.main_menu_button = None
 
         # Q-table for storing state-action values
         self.q_table = {}
@@ -122,17 +125,74 @@ class SnakeGameRLAgent(Scene):
             return -1  # Small negative reward for each step to encourage faster solutions
 
 
-    def render_scene(self, screen):
-        """
-        Renders the game on the screen.
-        """
-        screen.fill("black")
-        for x, row in enumerate(self.game.state_arr):
-            for y, block in enumerate(row):
-                if block == BlockState.Snake:
-                    pygame.draw.rect(screen, "white", pygame.Rect(y * block_size, x * block_size, block_size, block_size), 0, 3)
-                if block == BlockState.Food:
-                    pygame.draw.rect(screen, "red", pygame.Rect(y * block_size, x * block_size, block_size, block_size), 0, 3)
+    def render_scene(self: Self, screen: pygame.Surface):
+        if self.game is not None:
+            
+                # Fill the background.
+                screen.fill("black")
+                
+                # --- Define the grid drawing area ---
+                # These offsets ensure that the grid is not drawn at the very edge,
+                # leaving room for a border and score readouts.
+                game_offset_x = 10
+                game_offset_y = 10
+                game_width = self.game.cols * block_size
+                game_height = self.game.rows * block_size
+                
+                # --- Draw the grid blocks ---
+                # Adjust each block's position based on the game area offsets.
+                for x, row in enumerate(self.game.state_arr):
+                    for y, block in enumerate(row):
+                        rect = pygame.Rect(
+                            game_offset_x + y * block_size,
+                            game_offset_y + x * block_size,
+                            block_size,
+                            block_size
+                        )
+                        if block == BlockState.Snake:
+                            pygame.draw.rect(screen, "white", rect, 0, 3)
+                        elif block == BlockState.Food:
+                            pygame.draw.rect(screen, "red", rect, 0, 3)
+                        elif block == BlockState.Obsticle:
+                            pygame.draw.rect(screen, "green", rect, 0, 3)
+                
+                # --- Draw a border around the grid ---
+                # The border is drawn with a padding so it doesn't overlap the grid blocks.
+                border_padding = 5  # adjust as needed
+                border_rect = pygame.Rect(
+                    game_offset_x - border_padding,
+                    game_offset_y - border_padding,
+                    game_width + 2 * border_padding,
+                    game_height + 2 * border_padding
+                )
+                pygame.draw.rect(screen, "white", border_rect, 3)
+                
+                # --- Draw the score readouts outside the grid ---
+                # Here, we choose to render the score information below the grid.
+                stats_offset_y = game_offset_y + game_height + 10
+                font = pygame.font.SysFont("Arial", 24)
+                score_text = font.render(f"Score: {self.game.score}", True, (255, 255, 255))
+                time_text = font.render(f"Time: {self.game.get_elapsed_time():.1f}s", True, (255, 255, 255))
+                high_score_text = font.render(f"High Score: {self.game.get_high_score()}", True, (255, 255, 255))
+                
+                screen.blit(score_text, (game_offset_x, stats_offset_y))
+                screen.blit(time_text, (game_offset_x, stats_offset_y + 30))
+                screen.blit(high_score_text, (game_offset_x, stats_offset_y + 60))
+
+                button_width = 200
+                button_height = 50
+                menu_x = game_offset_x + game_width - button_width
+                menu_y = game_offset_y + game_height + 10
+                menu_y = stats_offset_y
+                if self.main_menu_button is None:
+                    self.main_menu_button = Button(
+                        label="Main Menu",
+                        callback=self.load_main_menu
+                    )
+                #self.main_menu_button.rect = pygame.Rect(game_width - game_offset_x, menu_y, button_width, button_height)
+                self.main_menu_button.rect = pygame.Rect(menu_x, menu_y, button_width, button_height)
+                self.main_menu_button.draw(screen)
+
 
 
     def set_scale(self, width: int):
@@ -140,4 +200,9 @@ class SnakeGameRLAgent(Scene):
         Sets the scale of the game grid.
         """
         global block_size
-        block_size = width / self.game.cols
+        block_size = (width - 20) / self.game.cols
+
+    def load_main_menu(self):
+        from Scenes import MainMenuScene as mm
+        new_scene = mm.MainMenuScene()
+        self.game_manager.changeScene(new_scene)
