@@ -1,37 +1,35 @@
 import networkx as nx
 from Games.SnakeGameLogic import BlockState
 
-def array_to_graph(state_arr):
+def array_to_graph(grid):
     """
-    Convert a 2D array representing the snake game state into a networkx graph.
+    Creates a graph from a 2D grid.
     
-    Args:
-        state_arr: 2D array where each cell represents a block state (Empty, Snake, Food, Obstacle)
-        
-    Returns:
-        networkx.Graph: A graph where nodes represent empty cells and edges represent valid moves
+    Nodes represent each cell (as (row, col)) that is not an obstacle.
+    Edges connect nodes that are adjacent in the grid (up, down, left, right).
     """
-    rows, cols = len(state_arr), len(state_arr[0])
     G = nx.Graph()
-    
-    # Create nodes for empty cells
+    rows = len(grid)
+    cols = len(grid[0]) if rows > 0 else 0
+
+    # Add nodes for cells that are not obstacles.
     for i in range(rows):
         for j in range(cols):
-            if state_arr[i][j] == BlockState.Empty:
+            if grid[i][j] != BlockState.Obsticle:
                 G.add_node((i, j))
-    
-    # Add edges between adjacent empty cells
+
+    # Add edges between adjacent non-obstacle cells.
+    # Here we consider the four cardinal directions.
     for i in range(rows):
         for j in range(cols):
-            if state_arr[i][j] == BlockState.Empty:
-                # Check all four directions (up, down, left, right)
+            if grid[i][j] != BlockState.Obsticle:
+                # List of neighbor directions: up, down, left, right
                 for di, dj in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     ni, nj = i + di, j + dj
-                    # Check if the neighbor is within bounds and is an empty cell
-                    if (0 <= ni < rows and 0 <= nj < cols and 
-                        state_arr[ni][nj] == BlockState.Empty):
+                    # Check grid boundaries and if neighbor is not an obstacle.
+                    if 0 <= ni < rows and 0 <= nj < cols and grid[ni][nj] != BlockState.Obsticle:
+                        # Add an undirected edge between current cell and neighbor.
                         G.add_edge((i, j), (ni, nj))
-    
     return G
 
 def get_valid_moves(state_arr, position):
@@ -75,7 +73,7 @@ def update_graph_for_snake_movement(G, state_arr, old_head_pos, new_head_pos, ta
     """
     rows, cols = len(state_arr), len(state_arr[0])
     
-    # Remove the old tail position from the graph (if it's now empty)
+    # Remove the old head position from the graph (if it's now empty)
     if old_head_pos in G:
         # Remove all edges connected to the old head position
         G.remove_node(old_head_pos)
