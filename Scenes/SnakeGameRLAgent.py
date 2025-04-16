@@ -4,13 +4,16 @@ from .Scene import Scene
 from Games.SnakeGameLogic import SnakeGame, InputAction, BlockState
 from Singlton import GAME_MANAGER
 
+
 class SnakeGameRLAgent(Scene):
     def __init__(self):
         # Initialize the Snake game
-        self.game = SnakeGame()
+        self.game = SnakeGame("rl_agent")
+
 
         # Q-table for storing state-action values
         self.q_table = {}
+
 
         # Learning parameters
         self.learning_rate = 0.1
@@ -19,11 +22,14 @@ class SnakeGameRLAgent(Scene):
         self.epsilon_decay = 0.995
         self.min_epsilon = 0.01
 
+
         # Actions the agent can take
         self.actions = [InputAction.Up, InputAction.Down, InputAction.Left, InputAction.Right]
 
+
         # Time tracking for limiting agent speed
         self.last_action_time = 0
+
 
     def get_state(self):
         """
@@ -32,6 +38,7 @@ class SnakeGameRLAgent(Scene):
         head_x, head_y = self.game.head_location
         food_x, food_y = [(x, y) for x, row in enumerate(self.game.state_arr) for y, block in enumerate(row) if block == BlockState.Food][0]
         return (head_x, head_y, food_x, food_y)
+
 
     def choose_action(self, state):
         """
@@ -49,6 +56,7 @@ class SnakeGameRLAgent(Scene):
                 self.q_table[state] = {action: 0 for action in self.actions}
                 return np.random.choice(self.actions)
 
+
     def update_q_table(self, state, action, reward, next_state):
         """
         Updates the Q-value for the given state-action pair using the Q-learning formula.
@@ -58,11 +66,13 @@ class SnakeGameRLAgent(Scene):
         if next_state not in self.q_table:
             self.q_table[next_state] = {a: 0 for a in self.actions}
 
+
         # Q-learning formula
         old_value = self.q_table[state][action]
         next_max = max(self.q_table[next_state].values())
         new_value = old_value + self.learning_rate * (reward + self.discount_factor * next_max - old_value)
         self.q_table[state][action] = new_value
+
 
     def collect_input(self):
         """
@@ -72,27 +82,33 @@ class SnakeGameRLAgent(Scene):
         action = self.choose_action(state)
         self.game.set_action(action)
 
+
     def process_input(self, dt: float):
         """
         Processes the chosen action and updates the Q-table.
         """
         if self.game.is_dead:
-            self.game = SnakeGame()
+            self.game = SnakeGame("rl_agent")
             self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
             return
+
 
         # Get the current state
         state = self.get_state()
 
+
         # Perform the action
         self.game.process_action()
+
 
         # Get the next state and reward
         next_state = self.get_state()
         reward = self.get_reward()
 
+
         # Update the Q-table
         self.update_q_table(state, self.game.action, reward, next_state)
+
 
     def get_reward(self):
         """
@@ -105,6 +121,7 @@ class SnakeGameRLAgent(Scene):
         else:
             return -1  # Small negative reward for each step to encourage faster solutions
 
+
     def render_scene(self, screen):
         """
         Renders the game on the screen.
@@ -116,6 +133,7 @@ class SnakeGameRLAgent(Scene):
                     pygame.draw.rect(screen, "white", pygame.Rect(y * block_size, x * block_size, block_size, block_size), 0, 3)
                 if block == BlockState.Food:
                     pygame.draw.rect(screen, "red", pygame.Rect(y * block_size, x * block_size, block_size, block_size), 0, 3)
+
 
     def set_scale(self, width: int):
         """

@@ -21,12 +21,12 @@ class InputAction(Enum):
 
 class SnakeGame:
 
-    def __init__(self: Self, save_id: str) -> Self:
+    def __init__(self: Self, save_id: str, rows=26, cols=32) -> Self:
         self.score = 0
         self.save_id = save_id
         self.is_dead = False
         self.action = InputAction.Right
-        self.rows, self.cols = (45,80)
+        self.rows, self.cols = (rows,cols)
         self.state_arr = [[BlockState.Empty for i in range(self.cols)] for j in range(self.rows)]
         self.head_location = (int(self.rows / 2), int(self.cols / 2))
         self.tail_locations = deque()
@@ -70,6 +70,10 @@ class SnakeGame:
             self.save_game(self.save_id, self.attempts, self.score, self.elapsed_time)
             return
         if self.state_arr[new_head_x][new_head_y] == BlockState.Snake or self.state_arr[new_head_x][new_head_y] == BlockState.Obsticle:
+            self.is_dead = True
+            self.save_game(self.save_id, self.attempts, self.score, self.elapsed_time)
+            return
+        if self.score == self.rows * self.cols - 5:
             self.is_dead = True
             self.save_game(self.save_id, self.attempts, self.score, self.elapsed_time)
             return
