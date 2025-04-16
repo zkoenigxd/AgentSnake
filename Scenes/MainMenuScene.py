@@ -54,6 +54,7 @@ class MainMenuScene(Scene):
     def load_snake_game_a_star_agent(self):
         from Scenes import SnakeGameAStarAgentScene as gs
         new_scene = gs.SnakeGameAStarAgentScene()
+        self.game_manager.changeScene(new_scene)
 
     def load_snake_game_rl_agent(self):
         from Scenes import SnakeGameRLAgent as rl

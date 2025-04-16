@@ -14,6 +14,11 @@ class SnakeGameAStarAgentScene(Scene):
         self.tail_position = None
         self.last_input_process = 0
         self.speed = 10
+        self.mouse_down_previous = False
+        self.main_menu_button = None
+        self.speed_increase_button = None
+        self.speed_decrease_button = None
+        self.restart_button = None
         # Initialize for the first path
         self.create_path()
     
@@ -52,6 +57,18 @@ class SnakeGameAStarAgentScene(Scene):
             # Update tail position if we don't have one yet
             if self.tail_position is None:
                 self.tail_position = self.game.tail_locations[0]
+        
+        # Check for button clicks.
+        mouse_pressed = pygame.mouse.get_pressed()[0]
+        if mouse_pressed and not self.mouse_down_previous:
+            mouse_pos = pygame.mouse.get_pos()
+            if self.main_menu_button is not None and self.main_menu_button.rect.collidepoint(mouse_pos):
+                self.main_menu_button.on_click()
+            if self.speed_decrease_button is not None and self.speed_decrease_button.rect.collidepoint(mouse_pos):
+                self.speed_decrease_button.on_click()
+            if self.speed_increase_button is not None and self.speed_increase_button.rect.collidepoint(mouse_pos):
+                self.speed_increase_button.on_click()
+        self.mouse_down_previous = mouse_pressed
 
     def create_path(self) -> List[Tuple[int, int]]:
         """Creates a path using A* pathfinding"""
@@ -148,85 +165,222 @@ class SnakeGameAStarAgentScene(Scene):
         return None
 
     def set_scale(self, width: int):
-        """Sets the scale/size of the game based on window width."""
-        global block_size  # Add this line
-        block_size = width / self.game.cols  # Match human agent scene's scaling
-        self.grid_size = block_size
+        global block_size
+        block_size = (width - 20) / self.game.cols
 
-    def render_scene(self, screen):
+    def render_scene(self: Self, screen: pygame.Surface):
         if self.game is not None:
             if self.game.is_dead:
                 self.end_game(screen)
             else:
+                # Fill the background.
                 screen.fill("black")
-                # Draw based on state array
+                
+                # --- Define the grid drawing area ---
+                # These offsets ensure that the grid is not drawn at the very edge,
+                # leaving room for a border and score readouts.
+                game_offset_x = 10
+                game_offset_y = 10
+                game_width = self.game.cols * block_size
+                game_height = self.game.rows * block_size
+                
+                # --- Draw the grid blocks ---
+                # Adjust each block's position based on the game area offsets.
                 for x, row in enumerate(self.game.state_arr):
                     for y, block in enumerate(row):
+                        rect = pygame.Rect(
+                            game_offset_x + y * block_size,
+                            game_offset_y + x * block_size,
+                            block_size,
+                            block_size
+                        )
                         if block == BlockState.Snake:
-                            pygame.draw.rect(screen, "white", pygame.Rect(y * block_size, x * block_size, block_size, block_size), 0, 3)
-                        if block == BlockState.Food:
-                            pygame.draw.rect(screen, "red", pygame.Rect(y * block_size, x * block_size, block_size, block_size), 0, 3)
-                        if block == BlockState.Obsticle:
-                            pygame.draw.rect(screen, "green", pygame.Rect(y * block_size, x * block_size, block_size, block_size), 0, 3)
-
-                # Display game stats like the human agent scene
+                            pygame.draw.rect(screen, "white", rect, 0, 3)
+                        elif block == BlockState.Food:
+                            pygame.draw.rect(screen, "red", rect, 0, 3)
+                        elif block == BlockState.Obsticle:
+                            pygame.draw.rect(screen, "green", rect, 0, 3)
+                
+                self.visualize_path(screen)
+                # --- Draw a border around the grid ---
+                # The border is drawn with a padding so it doesn't overlap the grid blocks.
+                border_padding = 5  # adjust as needed
+                border_rect = pygame.Rect(
+                    game_offset_x - border_padding,
+                    game_offset_y - border_padding,
+                    game_width + 2 * border_padding,
+                    game_height + 2 * border_padding
+                )
+                pygame.draw.rect(screen, "white", border_rect, 3)
+                
+                # --- Draw the score readouts outside the grid ---
+                # Here, we choose to render the score information below the grid.
+                stats_offset_y = game_offset_y + game_height + 10
                 font = pygame.font.SysFont("Arial", 24)
                 score_text = font.render(f"Score: {self.game.score}", True, (255, 255, 255))
                 time_text = font.render(f"Time: {self.game.get_elapsed_time():.1f}s", True, (255, 255, 255))
                 high_score_text = font.render(f"High Score: {self.game.get_high_score()}", True, (255, 255, 255))
                 
-                screen.blit(score_text, (10, 10))
-                screen.blit(time_text, (10, 40))
-                screen.blit(high_score_text, (10, 70))
+                screen.blit(score_text, (game_offset_x, stats_offset_y))
+                screen.blit(time_text, (game_offset_x, stats_offset_y + 30))
+                screen.blit(high_score_text, (game_offset_x, stats_offset_y + 60))
 
-    def end_game(self, screen):
-        """Handle game over state"""
+                button_width = 200
+                button_height = 50
+                menu_x = game_offset_x + game_width - button_width
+                menu_y = game_offset_y + game_height + 10
+                menu_y = stats_offset_y
+                if self.main_menu_button is None:
+                    self.main_menu_button = Button(
+                        label="Main Menu",
+                        callback=self.load_main_menu
+                    )
+                #self.main_menu_button.rect = pygame.Rect(game_width - game_offset_x, menu_y, button_width, button_height)
+                self.main_menu_button.rect = pygame.Rect(menu_x, menu_y, button_width, button_height)
+                self.main_menu_button.draw(screen)
+
+                # --- Place the Speed Control Buttons Below the Main Menu Button ---
+            # Define a small gap between rows.
+            vertical_gap = 10
+            speed_buttons_y = menu_y + button_height + vertical_gap
+            
+            # We'll arrange two buttons in a single row. Their total width equals the Main Menu button's width.
+            speed_button_margin = 10  # gap between the two speed buttons
+            speed_button_width = (button_width - speed_button_margin) // 2
+            speed_button_height = button_height
+            
+            # Left button: decrease speed ("Slow")
+            if self.speed_decrease_button is None:
+                self.speed_decrease_button = Button(
+                    label="Slow",
+                    callback=self.decrease_speed
+                )
+            speed_decrease_x = menu_x  # left column of the two-speed buttons
+            self.speed_decrease_button.rect = pygame.Rect(speed_decrease_x, speed_buttons_y, speed_button_width, speed_button_height)
+            self.speed_decrease_button.draw(screen)
+            
+            # Right button: increase speed ("Fast")
+            if self.speed_increase_button is None:
+                self.speed_increase_button = Button(
+                    label="Fast",
+                    callback=self.increase_speed
+                )
+            speed_increase_x = menu_x + speed_button_width + speed_button_margin
+            self.speed_increase_button.rect = pygame.Rect(speed_increase_x, speed_buttons_y, speed_button_width, speed_button_height)
+            self.speed_increase_button.draw(screen)
+            
+    def decrease_speed(self):
+        """
+        Decrease the game speed, but do not let it go below a minimum value.
+        """
+        # Decrease speed by 5 (or any step you choose), ensuring a minimum of 5.
+        self.speed = max(1, self.speed - 5)
+        print(f"Speed decreased to {self.speed}")
+
+    def increase_speed(self):
+        """
+        Increase the game speed.
+        """
+        # Increase speed by 5.
+        self.speed = min(200, self.speed + 5)
+        print(f"Speed increased to {self.speed}")
+
+    def visualize_path(self, screen):
+        """
+        Visualize the Hamiltonian path on the screen,
+        drawing it centered relative to the grid.
+        """
+        if not self.path:
+            return
+
+        # Use the same offsets as in render_scene.
+        game_offset_x = 10
+        game_offset_y = 10
+
+        # Draw the path with a green line.
+        for i in range(len(self.path) - 1):
+            start_pos = self.path[i]
+            end_pos = self.path[i + 1]
+
+            # Convert grid positions to screen coordinates, adding the offsets.
+            start_x = game_offset_x + start_pos[1] * block_size + block_size // 2
+            start_y = game_offset_y + start_pos[0] * block_size + block_size // 2
+            end_x = game_offset_x + end_pos[1] * block_size + block_size // 2
+            end_y = game_offset_y + end_pos[0] * block_size + block_size // 2
+
+            pygame.draw.line(screen, (0, 255, 0), (start_x, start_y), (end_x, end_y), 2)
+
+    def end_game(self: Self, screen: pygame.Surface):
+
+        # Fill the background with a solid color.
         screen.fill("red")
         
-        # Display game over text and stats
+        # Obtain screen dimensions.
+        screen_width, screen_height = screen.get_size()
+        
+        # Display game over text and stats in the upper half of the screen.
         font = pygame.font.SysFont("Arial", 48)
         game_over_text = font.render("Game Over", True, (255, 255, 255))
-        score_text = font.render(f"Score: {self.game.score}", True, (255, 255, 255))
-        time_text = font.render(f"Time: {self.game.get_elapsed_time():.1f}s", True, (255, 255, 255))
-        high_score_text = font.render(f"High Score: {self.game.get_high_score()}", True, (255, 255, 255))
-        total_time_text = font.render(f"Total Time: {self.game.get_total_time():.1f}s", True, (255, 255, 255))
+        font_small = pygame.font.SysFont("Arial", 24)
+        score_text = font_small.render(f"Score: {self.game.score}", True, (255, 255, 255))
+        time_text = font_small.render(f"Time: {self.game.get_elapsed_time():.1f}s", True, (255, 255, 255))
+        high_score_text = font_small.render(f"High Score: {self.game.get_high_score()}", True, (255, 255, 255))
+        total_time_text = font_small.render(f"Total Time: {self.game.get_total_time():.1f}s", True, (255, 255, 255))
         
-        screen_width, screen_height = screen.get_size()
+        # Center the game over text near the top half.
         game_over_rect = game_over_text.get_rect(center=(screen_width // 2, screen_height // 2 - 150))
-        score_rect = score_text.get_rect(center=(screen_width // 2, screen_height // 2 - 50))
-        time_rect = time_text.get_rect(center=(screen_width // 2, screen_height // 2))
-        high_score_rect = high_score_text.get_rect(center=(screen_width // 2, screen_height // 2 + 50))
-        total_time_rect = total_time_text.get_rect(center=(screen_width // 2, screen_height // 2 + 100))
-        
         screen.blit(game_over_text, game_over_rect)
-        screen.blit(score_text, score_rect)
-        screen.blit(time_text, time_rect)
-        screen.blit(high_score_text, high_score_rect)
-        screen.blit(total_time_text, total_time_rect)
         
-        # Create restart button if needed
-        if not hasattr(self, 'restart_button'):
+        # Place the stats below the "Game Over" text but away from the game area.
+        stats_y = game_over_rect.bottom + 10
+        screen.blit(score_text, (screen_width // 2 - score_text.get_width() // 2, stats_y))
+        screen.blit(time_text, (screen_width // 2 - time_text.get_width() // 2, stats_y + 40))
+        screen.blit(high_score_text, (screen_width // 2 - high_score_text.get_width() // 2, stats_y + 80))
+        screen.blit(total_time_text, (screen_width // 2 - total_time_text.get_width() // 2, stats_y + 120))
+
+        # --- Create/reset buttons with updated positions ---
+        # Restart Button:
+        button_width = 200
+        button_height = 50
+        window_width, window_height = screen.get_size()
+        y_position = window_height // 1.5 - button_height // 2
+        restart_x = (screen_width - button_width) // 2
+        # Position the restart button below the stats.
+        restart_y = y_position
+        if self.restart_button is None:
             self.restart_button = Button(
                 label="Restart Game",
                 callback=self.restart_game
             )
-            button_width = 200
-            button_height = 50
-            x_position = (screen_width - button_width) // 2
-            y_position = screen_height // 2 + 200
-            self.restart_button.rect = pygame.Rect(x_position, y_position, button_width, button_height)
+        self.restart_button.rect = pygame.Rect(restart_x, restart_y, button_width, button_height)
         
+        # Main Menu Button:
+        menu_y = restart_y + button_height + 10  # position below the restart button
+        if self.main_menu_button is None:
+            self.main_menu_button = Button(
+                label="Main Menu",
+                callback=self.load_main_menu
+            )
+        self.main_menu_button.rect = pygame.Rect(restart_x, menu_y, button_width, button_height)
+        
+        # Draw the buttons.
         self.restart_button.draw(screen)
+        self.main_menu_button.draw(screen)
         
-        # Handle button clicks
+        # Check for button clicks.
         mouse_pressed = pygame.mouse.get_pressed()[0]
-        if not hasattr(self, 'mouse_down_previous'):
-            self.mouse_down_previous = False
         if mouse_pressed and not self.mouse_down_previous:
             mouse_pos = pygame.mouse.get_pos()
             if self.restart_button.rect.collidepoint(mouse_pos):
                 self.restart_button.on_click()
+            if self.main_menu_button.rect.collidepoint(mouse_pos):
+                self.main_menu_button.on_click()
         self.mouse_down_previous = mouse_pressed
+
+    def load_main_menu(self):
+        from Scenes import MainMenuScene as mm
+        new_scene = mm.MainMenuScene()
+        self.game_manager.changeScene(new_scene)
 
     def restart_game(self):
         """Reset the game when the restart button is clicked"""

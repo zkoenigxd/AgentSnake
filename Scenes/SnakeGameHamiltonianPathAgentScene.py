@@ -177,6 +177,8 @@ class SnakeGameHamiltonianPathAgentScene(Scene):
                             pygame.draw.rect(screen, "red", rect, 0, 3)
                         elif block == BlockState.Obsticle:
                             pygame.draw.rect(screen, "green", rect, 0, 3)
+
+                self.visualize_path(screen)
                 
                 # --- Draw a border around the grid ---
                 # The border is drawn with a padding so it doesn't overlap the grid blocks.
@@ -263,24 +265,28 @@ class SnakeGameHamiltonianPathAgentScene(Scene):
 
     def visualize_path(self, screen):
         """
-        Visualize the Hamiltonian path on the screen.
+        Visualize the Hamiltonian path on the screen,
+        drawing it centered relative to the grid.
         """
         if not self.hamiltonian_path:
             return
-            
-        # Draw the path with a semi-transparent line
+
+        # Use the same offsets as in render_scene.
+        game_offset_x = 10
+        game_offset_y = 10
+
+        # Draw the path with a green line.
         for i in range(len(self.hamiltonian_path) - 1):
             start_pos = self.hamiltonian_path[i]
             end_pos = self.hamiltonian_path[i + 1]
-            
-            # Convert grid positions to screen coordinates
-            start_x = start_pos[1] * block_size + block_size // 2
-            start_y = start_pos[0] * block_size + block_size // 2
-            end_x = end_pos[1] * block_size + block_size // 2
-            end_y = end_pos[0] * block_size + block_size // 2
-            
-            # Draw a line between the points
-            pygame.draw.line(screen, (0, 255, 0, 128), (start_x, start_y), (end_x, end_y), 2)
+
+            # Convert grid positions to screen coordinates, adding the offsets.
+            start_x = game_offset_x + start_pos[1] * block_size + block_size // 2
+            start_y = game_offset_y + start_pos[0] * block_size + block_size // 2
+            end_x = game_offset_x + end_pos[1] * block_size + block_size // 2
+            end_y = game_offset_y + end_pos[0] * block_size + block_size // 2
+
+            pygame.draw.line(screen, (0, 255, 0), (start_x, start_y), (end_x, end_y), 2)
 
     def end_game(self: Self, screen: pygame.Surface):
         # Fill the background with a solid color.
